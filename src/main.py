@@ -2,24 +2,21 @@ from selenium import webdriver
 import bs4
 import time
 import itertools
-import exeptions
+import exceptions
 
 
 # export PATH="$PATH:/home/joan/tests/"
 def get_webpage(url):
-
     driver = webdriver.Firefox('./')
     driver.get(url)
     time.sleep(1)
     htmlSource = driver.page_source
     driver.quit()
 
-    with open('iec_cantar.txt', 'w') as f:
-        f.write(str(htmlSource))
+    return(str(htmlSource))  # To Do: check if cast to string is necessary
 
 
-def get_definitions(soup, word, examples=False):
-    "To do: implement tests, handle exeptions word not found"
+def scrap_definitions(soup, word, examples=False):
     """
     Given the soup of the IEC webpage of a word it retrieves a list of the definitions.
     If example is true, a list of tupples (definition,example) will be retrieved.
@@ -28,7 +25,7 @@ def get_definitions(soup, word, examples=False):
     definitions_html = soup.find(class_="resultDefinition")  # interesting part of the HTML
     not_found = "No s'ha trobat cap entrada coincident amb els criteris de cerca"
     if (definitions_html.text == not_found):
-        raise exeptions.WordNotFoundError(f'{word} not found')
+        raise exceptions.WordNotFoundError  #(f'{word} not found')
     definitions_html = soup.find_all(name='span', class_="body")  # list of HTML
     count = 0
     definitions_list = []
@@ -49,8 +46,15 @@ def get_definitions(soup, word, examples=False):
     return definitions_list
 
 
-if __name__ == "__main__":
+def get_definitions(word, examples=False):
+    url = f'https://dlc.iec.cat/results.asp?txtEntrada={word}'
+    htmlSource = get_webpage(url)
+    soup = bs4.BeautifulSoup(htmlSource, 'html.parser')
+    definitions = scrap_definitions(soup, word, examples)
+    return definitions
 
+
+if __name__ == "__main__":
     word = "afefe"
     url = f'https://dlc.iec.cat/results.asp?txtEntrada={word}'
     # get_webpage(url)

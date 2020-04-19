@@ -2,25 +2,30 @@ import sys
 sys.path.append("..")
 sys.path.append("../src")
 
-from src import *
+import pytest
+
+import bs4
+
+import main as catalan_dictionary
+import exceptions 
 
 
 def test_cantar():
-
-    word = "cantar"
-    url = f'https://dlc.iec.cat/results.asp?txtEntrada={word}'
-    get_webpage(url)
-    with open('iec_cantar.txt', 'r') as f:
-        soup = bs4.BeautifulSoup(f.read(), 'html.parser')
-    definitions = get_definitions(soup)
+    word = 'cantar'
+    definitions = catalan_dictionary.get_definitions(word)
     assert(len(definitions) == 20)
 
-def test_cantar_examples():
 
-    word = "cantar"
-    url = f'https://dlc.iec.cat/results.asp?txtEntrada={word}'
-    get_webpage(url)
-    with open('iec_cantar.txt', 'r') as f:
-        soup = bs4.BeautifulSoup(f.read(), 'html.parser')
-    definitions = get_definitions(soup)
+def test_cantar_examples():
+    word = 'cantar'
+    definitions = catalan_dictionary.get_definitions(word, examples=True)
     assert(len(list(definitions)) == 20)
+
+
+def test_WordNotFoundError():
+    word = "abcdff"
+    with pytest.raises(exceptions.WordNotFoundError):
+        definitions = catalan_dictionary.get_definitions(word, examples=True)
+
+
+test_WordNotFoundError()
