@@ -1,33 +1,43 @@
-import bs4
-import itertools
-import exceptions
+import os
+
+from bs4 import BeautifulSoup
 import requests
 
+import exceptions
+
 DEBUG = True
+if DEBUG and not os.path.exists('../logs'):
+    os.makedirs('../logs')
+
 
 def get_soup(url, word):
     html_get = requests.get(url)
-    soup_get = bs4.BeautifulSoup(html_get.text, 'html.parser')
+    soup_get = BeautifulSoup(html_get.text, 'html.parser')
 
-    with open('get_html.html', 'w') as f:
-        f.write(str(soup_get))
+    if DEBUG:
+        with open(f'../logs/{word}_get.html', 'w') as f:
+            f.write(soup_get.prettify())
 
-    definitions_html = soup_get.find(class_="resultDefinition") 
+    definitions_html = soup_get.find(class_="resultDefinition")
     not_found = "No s'ha trobat cap entrada coincident amb els criteris de cerca"
     if (definitions_html.text == not_found):
         raise exceptions.WordNotFoundError(f'{word} not found')
 
-    ids = [html['id'] for html in soup_get.find_all(class_='resultAnchor')]
+    # Get all the id of the words that are different words (different in length)
+    # and the ones that have same accentuation.
+    ids = [html['id'] for html in soup_get.find_all(class_='resultAnchor')
+           if (len(word) != len(html.text.strip()) or word == html.text.strip())]
+
     soups = []
     for id_ in ids:
         params = {'id': id_, 'searchParam': word}
         url_post = 'https://dlc.iec.cat/Results/Accepcio'
 
         html_post = requests.post(url_post, data=params)
-        soup_post = bs4.BeautifulSoup(html_post.text, 'html.parser')
+        soup_post = BeautifulSoup(html_post.text, 'html.parser')
         if DEBUG:
             with open(f'../logs/{word}{id_}.html', 'w') as f:
-                f.write(soup_post.  prettify())
+                f.write(soup_post.prettify())
         soups.append(soup_post)
 
     return soups
@@ -70,7 +80,7 @@ def get_definitions(word, examples=False):
 
 
 if __name__ == "__main__":
-    word = "bicicleta"
+    word = "cartera"
     definitions_list = get_definitions(word, examples=True)
     for d, e in definitions_list:
         print(d, e)
