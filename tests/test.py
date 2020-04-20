@@ -6,26 +6,28 @@ import pytest
 
 import bs4
 
-import main as catalan_dictionary
+import catalanDictionary
 import exceptions 
 
 
 def test_cantar():
     word = 'cantar'
-    definitions = catalan_dictionary.get_definitions(word)
+    definitions = catalanDictionary.get_definitions(word)
     assert(len(definitions) == 20)
 
 
 def test_cantar_examples():
     word = 'cantar'
-    definitions = catalan_dictionary.get_definitions(word, examples=True)
-    assert(len(list(definitions)) == 20)
+    definitions = catalanDictionary.get_definitions(word, examples=True)
+    definitions_unzipped = [[i for i, j in definitions],
+                            [j for i, j in definitions]]
+    assert(len(definitions_unzipped[0]) == 20)
+    assert(len(definitions_unzipped[1]) == 20)
+    assert(all(definitions_unzipped[1]))
 
 
 def test_WordNotFoundError():
     word = "abcdff"
     with pytest.raises(exceptions.WordNotFoundError):
-        definitions = catalan_dictionary.get_definitions(word, examples=True)
+        definitions = catalanDictionary.get_definitions(word, examples=True)
 
-
-test_WordNotFoundError()

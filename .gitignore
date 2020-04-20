@@ -10,3 +10,7 @@ src/iec_cantar.txt
 tests/iec_cantar.txt
 
 tests/geckodriver.log
+
+*.html
+
+src/html.txt
