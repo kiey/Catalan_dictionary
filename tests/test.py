@@ -22,8 +22,8 @@ def test_basic():
                                 'ocessament automàtic, l’obtenció, l’emmagatz'
                                 'ematge, la transformació i la comunicació de'
                                 ' la informació mitjançant programes preestab'
-                                'lerts. ')
-    assert(definitions[0][1] == 'Ordinador central. ')
+                                'lerts.')
+    assert(definitions[0][1] == 'Ordinador central.')
 
 
 def test_only_one_definiton():
@@ -33,7 +33,7 @@ def test_only_one_definiton():
     print(definitions[0])
     assert(definitions[0] == 'Vehicle lleuger de dues rodes, unides per un quad'
                              're, la del davant directora i la del darrere m'
-                             'otora, que s’acciona amb pedals. ')
+                             'otora, que s’acciona amb pedals.')
 
 
 def test_only_one_definiton_exemples():
@@ -42,7 +42,7 @@ def test_only_one_definiton_exemples():
     assert(len(definitions) == 1)
     assert(definitions[0][0] == 'Vehicle lleuger de dues rodes, unides per un quad'
                                 're, la del davant directora i la del darrere m'
-                                'otora, que s’acciona amb pedals. ')
+                                'otora, que s’acciona amb pedals.')
     assert(definitions[0][1] == 'Bicicleta de muntanya.')
 
 
@@ -59,7 +59,7 @@ def test_only_get_word_same_accentuation():
     assert(all(definitions_unzipped[0]))
     assert(len(definitions_unzipped[1]) == 20)
     assert(any(definitions_unzipped[1]))
-    assert(definitions[19][0] == 'Fer pudor. ')
+    assert(definitions[19][0] == 'Fer pudor.')
     assert(definitions[19][1] == 'Li canten els peus.')
 
     word2 = 'càntar'

@@ -1,3 +1,4 @@
+import argparse
 import os
 
 from bs4 import BeautifulSoup
@@ -5,9 +6,7 @@ import requests
 
 import exceptions
 
-DEBUG = True
-if DEBUG and not os.path.exists('../logs'):
-    os.makedirs('../logs')
+DEBUG = False
 
 
 def get_soup(url, word):
@@ -60,10 +59,10 @@ def scrap_definitions(soups, word, examples=False):
             if all([x.isdigit() for x in words]):
                 count = 0
             if count == 2:
-                definitions_list.append(element.text)
+                definitions_list.append(element.text.strip())
                 examples_list.append(None)
             elif count == 3:
-                examples_list[-1] = element.text
+                examples_list[-1] = element.text.strip()
             count += 1
     if examples:
         assert(len(examples_list) == len(definitions_list))
@@ -80,6 +79,15 @@ def get_definitions(word, examples=False):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--debug", help="stores html files in ../log", action="store_true")
+    args = parser.parse_args()
+    DEBUG = args.debug
+    if args.debug:
+        print("DEBUG ON")
+        if DEBUG and not os.path.exists('../logs'):
+            os.makedirs('../logs')
+
     word = "cartera"
     definitions_list = get_definitions(word, examples=True)
     for d, e in definitions_list:
