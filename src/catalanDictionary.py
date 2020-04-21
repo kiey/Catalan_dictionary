@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 
 from bs4 import BeautifulSoup
 import requests
@@ -7,6 +8,30 @@ import requests
 import exceptions
 
 DEBUG = False
+
+
+def remove_accentuation(txt):
+    txt_without_indexes = remove_superindexes_spaces(txt)
+    accents = {ord('à'): 'a', ord('è'): 'e', ord('é'): 'e', ord('í'): 'i',
+               ord('ò'): 'o', ord('ó'): 'o', ord('ú'): 'u', ord('ï'): 'i',
+               ord('ü'): 'u'}
+    return txt_without_indexes.translate(accents)
+
+
+def remove_superindexes_spaces(txt):
+    return re.sub("[²³¹⁰⁴⁵⁶⁷⁸⁹ ]", '', txt)
+
+
+def get_ids(soup, word):
+    """Get all the id of the words that are different words (different in length)
+     and the ones that have same accentuation.
+    """
+    ids = []
+    for html in soup.find_all(class_='resultAnchor'):
+        if (remove_accentuation(word) != remove_accentuation(html.text) or
+                word == remove_superindexes_spaces(html.text)):
+            ids.append(html['id'])
+    return ids
 
 
 def get_soup(url, word):
@@ -20,12 +45,10 @@ def get_soup(url, word):
     definitions_html = soup_get.find(class_="resultDefinition")
     not_found = "No s'ha trobat cap entrada coincident amb els criteris de cerca"
     if (definitions_html.text == not_found):
-        raise exceptions.WordNotFoundError(f'{word} not found')
+        raise exceptions.WordNotFoundError(word)
 
-    # Get all the id of the words that are different words (different in length)
-    # and the ones that have same accentuation.
-    ids = [html['id'] for html in soup_get.find_all(class_='resultAnchor')
-           if (len(word) != len(html.text.strip()) or word == html.text.strip())]
+    ids = get_ids(soup_get, word)
+    assert(len(ids) > 0)
 
     soups = []
     for id_ in ids:
@@ -64,14 +87,18 @@ def scrap_definitions(soups, word, examples=False):
             elif count == 3:
                 examples_list[-1] = element.text.strip()
             count += 1
+    assert(len(definitions_list) > 0)
+    assert(len(examples_list) == len(definitions_list))
+
     if examples:
-        assert(len(examples_list) == len(definitions_list))
         return list(zip(definitions_list, examples_list))
     else:
         return definitions_list
 
 
 def get_definitions(word, examples=False):
+    if not word.strip():
+        raise exceptions.EmptyStrError()
     url = f'https://dlc.iec.cat/results.asp?txtEntrada={word}'
     soups = get_soup(url, word)
     definitions = scrap_definitions(soups, word, examples)
@@ -88,7 +115,7 @@ if __name__ == "__main__":
         if DEBUG and not os.path.exists('../logs'):
             os.makedirs('../logs')
 
-    word = "cartera"
+    word = "hola adeu"
     definitions_list = get_definitions(word, examples=True)
     for d, e in definitions_list:
         print(d, e)
