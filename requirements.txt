@@ -1,4 +1,4 @@
 bs4==0.0.1
-pytest==5.4.1
+pytest
 requests==2.23.0
 
