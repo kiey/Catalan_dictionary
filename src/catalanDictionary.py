@@ -1,9 +1,13 @@
 import argparse
 import os
 import re
+import multiprocessing
+import functools
 
 from bs4 import BeautifulSoup
 import requests
+from concurrent import futures
+from tqdm import tqdm
 
 import exceptions
 
@@ -48,7 +52,8 @@ def get_soup(url, word):
         raise exceptions.WordNotFoundError(word)
 
     ids = get_ids(soup_get, word)
-    assert(len(ids) > 0)
+    if (len(ids) == 0):
+        raise exceptions.WordNotFoundError(word)
 
     soups = []
     for id_ in ids:
@@ -87,7 +92,8 @@ def scrap_definitions(soups, word, examples=False):
             elif count == 3:
                 examples_list[-1] = element.text.strip()
             count += 1
-    assert(len(definitions_list) > 0)
+    if(len(definitions_list) == 0):
+        raise exceptions.WordNotFoundError(word)
     assert(len(examples_list) == len(definitions_list))
 
     if examples:
@@ -104,6 +110,36 @@ def get_definitions(word, examples=False):
     definitions = scrap_definitions(soups, word, examples)
     return definitions
 
+def get_definitions_list(shared_definitons, words, pbar, i, examples=False):
+    try:
+        shared_definitons[i] = get_definitions(words[i], examples)
+    except Exception as e:
+        raise e
+    finally:
+        pbar.update(1)
+
+
+def get_definitions_bulk(words, examples=False, num_threads=20, progress=True):
+    with futures.ThreadPoolExecutor(num_threads) as executor:  # Create a pool of worker processes
+        manager = multiprocessing.Manager()  # Create a manager to handle shared object(s).
+        # Create a proxy for the shared list object.
+        if examples:
+            print("examples")
+            shared_definitions = manager.list([None, None] * len(words))
+        else:
+            print("No examples")
+            shared_definitions = manager.list([None] * len(words))
+
+        pbar = tqdm(disable=not progress,total=len(words))
+
+        # Create a single arg function with the first positional argument (arr) supplied.
+        # (This is necessary because Pool.map() only works with functions of one argument.)
+        mono_arg_func = functools.partial(get_definitions_list, shared_definitions, words, pbar, examples=examples)
+        exceptions_map = executor.map(mono_arg_func, range(len(shared_definitions)))
+        #  for e in exceptions_map:
+        #     pass
+        return shared_definitions, exceptions_map
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -114,8 +150,8 @@ if __name__ == "__main__":
         print("DEBUG ON")
         if DEBUG and not os.path.exists('../logs'):
             os.makedirs('../logs')
-
-    word = "hola adeu"
-    definitions_list = get_definitions(word, examples=True)
+    #  'tenia', <class 'AssertionError'>), ('ho', <class 'AssertionError'>)
+    word = "ho"
+    definitions_list, exceptions_map = get_definitions(word, examples=False)
     for d, e in definitions_list:
         print(d, e)
