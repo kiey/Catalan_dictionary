@@ -1,3 +1,4 @@
+import re
 import sys
 sys.path.append("..")
 sys.path.append("../src")
@@ -82,3 +83,30 @@ def test_WordNotFoundError():
     word = "abcdf"
     with pytest.raises(exceptions.WordNotFoundError):
         definitions = catalanDictionary.get_definitions(word, examples=True)
+
+def test_long_text():
+    text = ("Twain fou un personatge molt conegut a la seva època, i va ser amic de"
+           " presidents, artistes, grans empresaris, i membres de la reialesa euro"
+           "pea. Pel seu enginy i talent per a la sàtira va ser molt popular. En e"
+           "l moment de la seva mort, se'l va considerar \"l'humorista americà més "
+           "gran de la seva època\",[2] i William Faulkner el va anomenar «el pare "
+           "de la literatura americana».")
+
+    words_not_found = []
+    words_found = []
+
+    for word in (re.split(r'\W+', text)):
+        try:
+            definitions = catalanDictionary.get_definitions(word, examples=True)
+            assert(len(definitions) > 0)
+            words_found.append(word)
+        except exceptions.WordNotFoundError:
+            words_not_found.append(word)
+        except exceptions.EmptyStrError:
+            pass
+
+    assert(len(words_not_found) == 6)
+    assert(len(words_found) == 65)
+    assert(len(words_not_found) == 6)
+
+
