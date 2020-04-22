@@ -104,7 +104,7 @@ def scrap_definitions(soups, word, examples=False):
 
 def get_definitions(word, examples=False):
     if not word.strip():
-        raise exceptions.EmptyStrError()
+        raise exceptions.WordNotFoundError(word)
     url = f'https://dlc.iec.cat/results.asp?txtEntrada={word}'
     soups = get_soup(url, word)
     definitions = scrap_definitions(soups, word, examples)

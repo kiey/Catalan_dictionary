@@ -105,8 +105,6 @@ def test_long_text():
         except exceptions.EmptyStrError:
             pass
 
-    assert(len(words_not_found) == 6)
+    assert(len(words_not_found) == 7)
     assert(len(words_found) == 65)
-    assert(len(words_not_found) == 6)
-
 
