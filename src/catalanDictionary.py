@@ -106,20 +106,26 @@ def get_definitions(word, examples=False):
     if not word.strip():
         raise exceptions.WordNotFoundError(word)
     url = f'https://dlc.iec.cat/results.asp?txtEntrada={word}'
-    soups = get_soup(url, word)
+    try:
+        soups = get_soup(url, word)
+    except requests.exceptions.ConnectionError as e:
+        raise exceptions.ConnectionError() from e
     definitions = scrap_definitions(soups, word, examples)
     return definitions
 
-def get_definitions_list(shared_definitons, words, pbar, i, examples=False):
+
+def get_definitions_list(shared_definitons, shared_exceptions, words, pbar, i, examples=False):
     try:
         shared_definitons[i] = get_definitions(words[i], examples)
     except Exception as e:
+        shared_exceptions.append((words[i], f'{type(e).__name__}'))
         raise e
     finally:
         pbar.update(1)
 
 
 def get_definitions_bulk(words, examples=False, num_threads=20, progress=True):
+    mum_threads = max(num_threads, 100)
     with futures.ThreadPoolExecutor(num_threads) as executor:  # Create a pool of worker processes
         manager = multiprocessing.Manager()  # Create a manager to handle shared object(s).
         # Create a proxy for the shared list object.
@@ -129,16 +135,18 @@ def get_definitions_bulk(words, examples=False, num_threads=20, progress=True):
         else:
             print("No examples")
             shared_definitions = manager.list([None] * len(words))
+        shared_exceptions = manager.list()
 
-        pbar = tqdm(disable=not progress,total=len(words))
+        pbar = tqdm(disable=not progress, total=len(words))
 
         # Create a single arg function with the first positional argument (arr) supplied.
         # (This is necessary because Pool.map() only works with functions of one argument.)
-        mono_arg_func = functools.partial(get_definitions_list, shared_definitions, words, pbar, examples=examples)
+        mono_arg_func = functools.partial(get_definitions_list, shared_definitions,
+                                          shared_exceptions, words, pbar, examples=examples)
         exceptions_map = executor.map(mono_arg_func, range(len(shared_definitions)))
         #  for e in exceptions_map:
         #     pass
-        return shared_definitions, exceptions_map
+        return shared_definitions, shared_exceptions
 
 
 if __name__ == "__main__":
@@ -151,7 +159,7 @@ if __name__ == "__main__":
         if DEBUG and not os.path.exists('../logs'):
             os.makedirs('../logs')
     #  'tenia', <class 'AssertionError'>), ('ho', <class 'AssertionError'>)
-    word = "ho"
-    definitions_list, exceptions_map = get_definitions(word, examples=False)
+    word = "i"
+    definitions_list = get_definitions(word, examples=True)
     for d, e in definitions_list:
         print(d, e)
