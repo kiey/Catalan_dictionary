@@ -16,3 +16,7 @@ tests/geckodriver.log
 src/html.txt
 
 logs/
+
+tests/long_text.py
+
+tests/same_output.py

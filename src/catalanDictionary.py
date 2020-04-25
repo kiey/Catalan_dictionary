@@ -84,12 +84,14 @@ def scrap_definitions(soups, word, examples=False):
 
         for element in definitions_html:
             words = element.text.split()
+            if (words[0][0] == '['):
+                continue
             if all([x.isdigit() for x in words]):
                 count = 0
-            if count == 2:
+            if count == 1:
                 definitions_list.append(element.text.strip())
                 examples_list.append(None)
-            elif count == 3:
+            elif count == 2:
                 examples_list[-1] = element.text.strip()
             count += 1
     if(len(definitions_list) == 0):
@@ -159,7 +161,7 @@ if __name__ == "__main__":
         if DEBUG and not os.path.exists('../logs'):
             os.makedirs('../logs')
     #  'tenia', <class 'AssertionError'>), ('ho', <class 'AssertionError'>)
-    word = "i"
+    word = "cantar"
     definitions_list = get_definitions(word, examples=True)
     for d, e in definitions_list:
         print(d, e)

@@ -9,25 +9,6 @@ import catalanDictionary as catDic
 import exceptions 
 
 
-def test_same_output_concurrent():
-    with open('texts/Cervantes.txt', 'r') as f:
-        text = f.readline()
-
-    words = re.split(r'\W+', text)
-    words_defs_conc, _ = catDic.get_definitions_bulk(words, num_threads=30)
-    word_defs_ser = []
-    for word in words:
-        try:
-            word_defs_ser.append(catDic.get_definitions(word))
-        except exceptions.WordNotFoundError:
-            word_defs_ser.append(None)
-    assert(len(words_defs_conc) == len(word_defs_ser))
-    for word_defs_conc, word_defs_ser, word in zip(words_defs_conc, word_defs_ser, words):
-        assert((word_defs_conc is None) == (word_defs_ser is None))
-        if word_defs_conc and word_defs_ser:
-            for def_conc, def_ser in zip(word_defs_conc, word_defs_ser):
-              assert(def_conc == def_ser)
-
 def test_basic():
     word = 'ordinador'
     definitions = catDic.get_definitions(word, examples=True)
@@ -65,7 +46,6 @@ def test_only_one_definiton_exemples():
                                 'otora, que s’acciona amb pedals.')
     assert(definitions[0][1] == 'Bicicleta de muntanya.')
 
-
 def test_only_get_word_same_accentuation():
     word1 = 'cantar'
     definitions = catDic.get_definitions(word1)
@@ -101,16 +81,12 @@ def test_word_with_different_name_entries():
 def test_WordNotFoundError():
     word = "abcdf"
     with pytest.raises(exceptions.WordNotFoundError):
-        definitions = catDic.get_definitions(word, examples=True)
+        catDic.get_definitions(word, examples=True)
+
 
 def test_long_text():
-    text = ("Twain fou un personatge molt conegut a la seva època, i va ser amic de"
-           " presidents, artistes, grans empresaris, i membres de la reialesa euro"
-           "pea. Pel seu enginy i talent per a la sàtira va ser molt popular. En e"
-           "l moment de la seva mort, se'l va considerar \"l'humorista americà més "
-           "gran de la seva època\",[2] i William Faulkner el va anomenar «el pare "
-           "de la literatura americana».")
-
+    with open('texts/Twain.txt', 'r') as f:
+        text = f.read()
     words_not_found = []
     words_found = []
 
@@ -124,7 +100,7 @@ def test_long_text():
         except exceptions.EmptyStrError:
             pass
 
-    assert(len(words_not_found) == 7)
+    assert(len(words_not_found) == 8)
     assert(len(words_found) == 65)
 
 
@@ -135,10 +111,29 @@ def test_cervantes_bulk():
     words = re.split(r'\W+', text)
     words_definitions, exceptions_bulk = catDic.get_definitions_bulk(words, num_threads=30)
     for word, error in exceptions_bulk:
-        assert(len(exceptions_bulk) <= 127)
         assert(error == "WordNotFoundError")
 
+    assert(len(exceptions_bulk) <= 127)
     for word_definitions in words_definitions:
         assert(word_definitions is None or any(word_definitions))
 
+
+def test_same_output_concurrent():
+    with open('texts/Cervantes.txt', 'r') as f:
+        text = f.readline()
+
+    words = re.split(r'\W+', text)
+    words_defs_conc, _ = catDic.get_definitions_bulk(words, num_threads=30)
+    word_defs_ser = []
+    for word in words:
+        try:
+            word_defs_ser.append(catDic.get_definitions(word))
+        except exceptions.WordNotFoundError:
+            word_defs_ser.append(None)
+    assert(len(words_defs_conc) == len(word_defs_ser))
+    for word_defs_conc, word_defs_ser, word in zip(words_defs_conc, word_defs_ser, words):
+        assert((word_defs_conc is None) == (word_defs_ser is None))
+        if word_defs_conc and word_defs_ser:
+            for def_conc, def_ser in zip(word_defs_conc, word_defs_ser):
+                assert(def_conc == def_ser)
 
