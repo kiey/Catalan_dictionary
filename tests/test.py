@@ -111,7 +111,7 @@ def test_WordNotFoundError():
         catDic.get_definitions(word, examples=True)
 
 
-def test_long_text():
+def test_long_text_serial_definitons():
     with open('texts/Twain.txt', 'r') as f:
         text = f.read()
     words_not_found = []
@@ -131,7 +131,23 @@ def test_long_text():
     assert(len(words_found) == 65)
 
 
-def test_cervantes_bulk():
+def test_long_text_serial_syllabes():
+    with open('texts/Twain.txt', 'r') as f:
+        text = f.read()
+
+    for word in (re.split(r'\W+', text)):
+        try:
+            syllables, tonic = catDic.get_syllables(word)
+            assert(any(syllables))
+            assert(0 <= tonic <= len(syllables))
+        except exceptions.WordNotFoundError:
+            pass
+        except exceptions.EmptyStrError:
+            pass
+
+
+
+def test_long_cervantes_bulk():
     with open('texts/Cervantes.txt', 'r') as f:
         text = f.read()
 
@@ -146,7 +162,7 @@ def test_cervantes_bulk():
         assert(word_definitions is None or any(word_definitions))
 
 
-def test_same_output_concurrent():
+def test_long_same_output_concurrent():
     with open('texts/Cervantes.txt', 'r') as f:
         text = f.readline()
 
