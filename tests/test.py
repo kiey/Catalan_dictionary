@@ -86,6 +86,25 @@ def test_word_with_different_name_entries():
     assert(any(definitions_unzipped[1]))
 
 
+def test_syllables_no_accents_word():
+    word = 'tassa'
+    syllabes, tonic = catDic.get_syllables(word)
+    assert(syllabes == ['tas', 'sa'])
+    assert(tonic == 0)
+
+
+def test_syllables_accents_words():
+    word = 'cantar'
+    syllabes, tonic = catDic.get_syllables(word)
+    assert(syllabes == ['can', 'tar'])
+    assert(tonic == 1)
+
+    word = 'càntar'
+    syllabes, tonic = catDic.get_syllables(word)
+    assert(syllabes == ['càn', 'tar'])
+    assert(tonic == 0)
+
+
 def test_WordNotFoundError():
     word = "abcdf"
     with pytest.raises(exceptions.WordNotFoundError):

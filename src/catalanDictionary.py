@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 import requests
 from concurrent import futures
 from tqdm import tqdm
+import urllib.parse as urlparse
+from urllib.parse import parse_qs
 
 import exceptions
 
@@ -38,21 +40,33 @@ def get_ids(soup, word):
             ids.append(html['id'])
     return ids
 
-
-def scrap_syllables(word):
-    """ Given a word it returns a list containing the syllabes splitted and the index of the tonic syllable"""
-    base_url = 'http://ca.oslin.org/'
-    url = f'http://ca.oslin.org/index.php?sel=exact&query={word}&action=simplesearch&base=form'
-
-    html_get = requests.get(url)
-    soup_get = BeautifulSoup(html_get.text, 'html.parser')
-    
-    url = base_url + soup_get.find('a').get('href')
+def get_lemma(url, word):
     html_get = requests.get(url)
     soup_get = BeautifulSoup(html_get.text, 'html.parser')
     if DEBUG:
         with open(f'../logs/{word}_syllables_get.html', 'w') as f:
             f.write(soup_get.prettify())
+
+    lemmas = soup_get.find_all('a')
+    if len(lemmas) == 1:
+        return lemmas[0].get('href')
+    for lemma in lemmas:
+        if (word == lemma.text):
+            return lemma.get('href')
+    raise exceptions.WordNotFoundError(word)
+
+
+
+
+def get_syllables(word):
+    """ Given a word it returns a list containing the syllabes splitted and the index of the tonic syllable"""
+    base_url = 'http://ca.oslin.org/'
+    url = f'http://ca.oslin.org/index.php?sel=exact&query={word}&action=simplesearch&base=form'
+
+    lemma_url = get_lemma(url, word)
+    url = base_url + lemma_url
+    html_get = requests.get(url)
+    soup_get = BeautifulSoup(html_get.text, 'html.parser')
 
     definitions_html = soup_get.find(class_='syllables')
 
@@ -65,7 +79,6 @@ def scrap_syllables(word):
             break
 
     return syllabes_list, count
-
 
 
 
@@ -198,9 +211,17 @@ if __name__ == "__main__":
         if DEBUG and not os.path.exists('../logs'):
             os.makedirs('../logs')
     
+    word = "tassa"
+    url = 'http://ca.oslin.org/index.php?action=lemma&lemma=3754'
+    print(get_syllables(word))
+    print('-' * 80)
     word = "cantar"
     url = 'http://ca.oslin.org/index.php?action=lemma&lemma=3754'
-    print(scrap_syllables(word))
+    print(get_syllables(word))
+    print('-' * 80)
+    word = "clau"
+    url = 'http://ca.oslin.org/index.php?action=lemma&lemma=3754'
+    print(get_syllables(word))
 """
     definitions_list = get_definitions(word, examples=True)
     for d, e in definitions_list:
