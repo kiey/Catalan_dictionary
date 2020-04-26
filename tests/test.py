@@ -38,13 +38,21 @@ def test_only_one_definiton():
 
 
 def test_only_one_definiton_exemples():
-    word = 'bicicleta'
-    definitions = catDic.get_definitions(word, examples=True)
+    word1 = 'bicicleta'
+    definitions = catDic.get_definitions(word1, examples=True)
     assert(len(definitions) == 1)
     assert(definitions[0][0] == 'Vehicle lleuger de dues rodes, unides per un quad'
                                 're, la del davant directora i la del darrere m'
                                 'otora, que s’acciona amb pedals.')
     assert(definitions[0][1] == 'Bicicleta de muntanya.')
+
+    word2 = 'va'
+    definitions = catDic.get_definitions(word2, examples=True)
+    assert(len(definitions) == 6)
+    assert(definitions[0][0] ==
+        'Auxiliar del passat perifràstic i del passat anterior perifràstic d’indicatiu.')
+    assert(definitions[0][1] == 'Vaig caure.')
+
 
 def test_only_get_word_same_accentuation():
     word1 = 'cantar'
@@ -109,6 +117,7 @@ def test_cervantes_bulk():
         text = f.read()
 
     words = re.split(r'\W+', text)
+
     words_definitions, exceptions_bulk = catDic.get_definitions_bulk(words, num_threads=30)
     for word, error in exceptions_bulk:
         assert(error == "WordNotFoundError")

@@ -3,7 +3,8 @@ import os
 import re
 import multiprocessing
 import functools
-
+import traceback
+from bs4 import element
 from bs4 import BeautifulSoup
 import requests
 from concurrent import futures
@@ -38,7 +39,39 @@ def get_ids(soup, word):
     return ids
 
 
-def get_soup(url, word):
+def scrap_syllables(word):
+    """ Given a word it returns a list containing the syllabes splitted and the index of the tonic syllable"""
+    base_url = 'http://ca.oslin.org/'
+    url = f'http://ca.oslin.org/index.php?sel=exact&query={word}&action=simplesearch&base=form'
+
+    html_get = requests.get(url)
+    soup_get = BeautifulSoup(html_get.text, 'html.parser')
+    
+    url = base_url + soup_get.find('a').get('href')
+    html_get = requests.get(url)
+    soup_get = BeautifulSoup(html_get.text, 'html.parser')
+    if DEBUG:
+        with open(f'../logs/{word}_syllables_get.html', 'w') as f:
+            f.write(soup_get.prettify())
+
+    definitions_html = soup_get.find(class_='syllables')
+
+    syllabes_list = definitions_html.text.split('·')
+    count = 0
+    for a in definitions_html:
+        if (type(a) is element.NavigableString):
+            count += 1
+        if str(a).startswith('<u>'):
+            break
+
+    return syllabes_list, count
+
+
+
+
+def get_definitions_soup(url, word):
+    """ Given a url from the a word in the DIEC2, it retrieves the html contai
+    ning the definitons"""
     html_get = requests.get(url)
     soup_get = BeautifulSoup(html_get.text, 'html.parser')
 
@@ -109,7 +142,7 @@ def get_definitions(word, examples=False):
         raise exceptions.WordNotFoundError(word)
     url = f'https://dlc.iec.cat/results.asp?txtEntrada={word}'
     try:
-        soups = get_soup(url, word)
+        soups = get_definitions_soup(url, word)
     except requests.exceptions.ConnectionError as e:
         raise exceptions.ConnectionError() from e
     definitions = scrap_definitions(soups, word, examples)
@@ -119,6 +152,10 @@ def get_definitions(word, examples=False):
 def get_definitions_list(shared_definitons, shared_exceptions, words, pbar, i, examples=False):
     try:
         shared_definitons[i] = get_definitions(words[i], examples)
+    except IndexError as e:
+        # Output expected IndexErrors.
+        print(i, word, len(shared_definitons), len(words))
+        Logging.log_exception(error)
     except Exception as e:
         shared_exceptions.append((words[i], f'{type(e).__name__}'))
         raise e
@@ -127,7 +164,7 @@ def get_definitions_list(shared_definitons, shared_exceptions, words, pbar, i, e
 
 
 def get_definitions_bulk(words, examples=False, num_threads=20, progress=True):
-    mum_threads = max(num_threads, 100)
+    mum_threads = min(num_threads, 100)
     with futures.ThreadPoolExecutor(num_threads) as executor:  # Create a pool of worker processes
         manager = multiprocessing.Manager()  # Create a manager to handle shared object(s).
         # Create a proxy for the shared list object.
@@ -160,8 +197,12 @@ if __name__ == "__main__":
         print("DEBUG ON")
         if DEBUG and not os.path.exists('../logs'):
             os.makedirs('../logs')
-    #  'tenia', <class 'AssertionError'>), ('ho', <class 'AssertionError'>)
+    
     word = "cantar"
+    url = 'http://ca.oslin.org/index.php?action=lemma&lemma=3754'
+    print(scrap_syllables(word))
+"""
     definitions_list = get_definitions(word, examples=True)
     for d, e in definitions_list:
         print(d, e)
+"""
