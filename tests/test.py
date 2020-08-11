@@ -48,6 +48,11 @@ def test_only_one_definiton_exemples():
 
     word2 = 'va'
     definitions = catDic.get_definitions(word2, examples=True)
+    print(definitions)
+    f = open("test_output.txt", "w")
+    for d in definitions:
+        f.write(str(d) + '\n')
+    f.close()
     assert(len(definitions) == 6)
     assert(definitions[0][0] ==
         'Auxiliar del passat perifràstic i del passat anterior perifràstic d’indicatiu.')
@@ -81,8 +86,8 @@ def test_word_with_different_name_entries():
     definitions = catDic.get_definitions(word, examples=True)
     definitions_unzipped = [[i for i, j in definitions],
                             [j for i, j in definitions]]
-    assert(len(definitions_unzipped[0]) == 12)
-    assert(len(definitions_unzipped[1]) == 12)
+    assert(len(definitions_unzipped[0]) == 9)
+    assert(len(definitions_unzipped[1]) == 9)
     assert(any(definitions_unzipped[1]))
 
 
@@ -118,14 +123,14 @@ def test_long_text_serial_definitons():
     words_found = []
 
     for word in (re.split(r'\W+', text)):
-        try:
-            definitions = catDic.get_definitions(word, examples=True)
-            assert(len(definitions) > 0)
-            words_found.append(word)
-        except exceptions.WordNotFoundError:
-            words_not_found.append(word)
-        except exceptions.EmptyStrError:
-            pass
+        with open("debug.txt", 'w') as f:
+            print(word, file=f)
+            try:
+                definitions = catDic.get_definitions(word, examples=True)
+                assert(len(definitions) > 0)
+                words_found.append(word)
+            except exceptions.WordNotFoundError:
+                words_not_found.append(word)
 
     assert(len(words_not_found) == 8)
     assert(len(words_found) == 65)

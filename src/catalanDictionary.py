@@ -30,14 +30,18 @@ def remove_superindexes_spaces(txt):
 
 
 def get_ids(soup, word):
-    """Get all the id of the words that are different words (different in length)
-     and the ones that have same accentuation.
+    """Get all the id of the words that are equal at the word passed, if none
+    found return the first one. For example return "meu" if asking for "meva".
     """
     ids = []
     for html in soup.find_all(class_='resultAnchor'):
-        if (remove_accentuation(word) != remove_accentuation(html.text) or
+        if (remove_accentuation(word) == remove_accentuation(html.text) and
                 word == remove_superindexes_spaces(html.text)):
             ids.append(html['id'])
+
+    if not ids:
+        html = soup.find(class_='resultAnchor')
+        ids.append(html['id'])
     return ids
 
 def get_lemma(url, word):
@@ -127,9 +131,12 @@ def scrap_definitions(soups, word, examples=False):
     for soup in soups:
         definitions_html = soup.find_all(name='span', class_="\\\"body\\\"")  # list of HTML
         count = 1
+        #print(definitions_html)
 
         for element in definitions_html:
             words = element.text.split()
+            if not words:
+                continue
             if (words[0][0] == '['):
                 continue
             if all([x.isdigit() for x in words]):
@@ -210,6 +217,12 @@ if __name__ == "__main__":
         print("DEBUG ON")
         if DEBUG and not os.path.exists('../logs'):
             os.makedirs('../logs')
+    word = "tassa"
+    print(get_definitions(word))
+    word = "seva"
+    print(get_definitions(word))
+
+    """
     
     word = "tassa"
     url = 'http://ca.oslin.org/index.php?action=lemma&lemma=3754'
@@ -222,8 +235,7 @@ if __name__ == "__main__":
     word = "clau"
     url = 'http://ca.oslin.org/index.php?action=lemma&lemma=3754'
     print(get_syllables(word))
-"""
     definitions_list = get_definitions(word, examples=True)
     for d, e in definitions_list:
         print(d, e)
-"""
+    """

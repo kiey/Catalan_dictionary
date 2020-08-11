@@ -1,0 +1,6 @@
+('Auxiliar del passat perifràstic i del passat anterior perifràstic d’indicatiu.', 'Vaig caure.')
+('Auxiliar del passat perifràstic i del passat anterior perifràstic de subjuntiu.', 'Vagi caure.')
+('Que no té sinó l’aparença, sense realitat, sense fonament.', 'Ombres vanes.')
+('Sense eficàcia, inútil.', 'Esforços vans.')
+('en va loc. adv. D’una manera vana. És en va que tractis de persuadir-lo. Tot serà en va.', None)
+('Que té el desig d’ésser notat, però és mancat de consistència moral.', 'Quina gent tan vana i frívola! Només pensen a cridar l’atenció.')
